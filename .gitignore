@@ -1,2 +1,4 @@
 extension/dist
 extension/manifest.json
+extension.crx
+extension.pem
