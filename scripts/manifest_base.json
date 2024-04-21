@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "Replace Code To Span",
+	"name": "コードを文脈的に翻訳",
 	"version": "1",
-	"description": "Replace <code> to <span>",
+	"description": "プログラミングのドキュメントを翻訳したときに、文章内の<code>要素が無視されて翻訳されないのを修正します。なるべく文章内のキーワードのみをターゲットにするようにしています。",
 
 	"content_security_policy": {
 		"extension_pages": "default-src 'self'"
