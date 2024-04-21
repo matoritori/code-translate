@@ -1,0 +1,35 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"isolatedModules": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "react",
+		"lib": ["dom", "dom.iterable", "ESNext"],
+		"module": "ESNext",
+		"moduleResolution": "node",
+		"noImplicitAny": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ESNext",
+		"paths": {
+			"@background/*": ["./src/background/*"],
+			"@content-script/*": ["./src/content-script/*"],
+			"@models/*": ["./src/models/*"],
+			"@options/*": ["src/options/*"],
+			"@popup/*": ["./src/popup/*"],
+			"@storage/*": ["./src/storage/*"],
+			"@utils/*": ["./src/utils/*"],
+			"@root/*": ["./src/*"]
+		}
+	},
+	"include": [
+		"src/**/*",
+		"ui-test-server/**/*",
+		"../node_modules/chrome-types/index.d.ts"
+	]
+}

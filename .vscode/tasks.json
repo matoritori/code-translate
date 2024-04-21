@@ -1,0 +1,61 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "serve ui-test-options",
+			"type": "shell",
+			"command": "npm run serve -- code-translate ui-test-options",
+			"problemMatcher": []
+		},
+
+		{
+			"label": "Start Development",
+			"dependsOn": ["npm start for development", "Write manifest for development"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": []
+		},
+
+		{
+			"label": "Start Production",
+			"dependsOn": ["npm start for production", "Write manifest for production"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": []
+		},
+
+		{
+			"label": "npm start for development",
+			"type": "shell",
+			"command": "npm start -- code-translate",
+			"problemMatcher": []
+		},
+
+		{
+			"label": "npm start for production",
+			"type": "shell",
+			"command": "npm start -- code-translate p",
+			"problemMatcher": []
+		},
+
+		{
+			"label": "Write manifest for development",
+			"type": "shell",
+			"command": "node ./scripts/generateManifest.js d",
+			"problemMatcher": []
+		},
+
+		{
+			"label": "Write manifest for production",
+			"type": "shell",
+			"command": "node ./scripts/generateManifest.js p",
+			"problemMatcher": []
+		}
+	]
+}

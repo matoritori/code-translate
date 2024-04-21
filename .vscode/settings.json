@@ -1,0 +1,4 @@
+{
+	"jest.jestCommandLine": "npm test -- [dirname] --config=[dirname]/jest.config.js",
+	"jest.runMode": "deferred"
+}
