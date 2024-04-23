@@ -1,4 +1,5 @@
 const fs = require('fs')
+const fsPromise = require('fs').promises
 const path = require('path')
 const chokidar = require('chokidar')
 const baseManifestPath = path.join(__dirname, './manifest_base.json')
@@ -17,11 +18,11 @@ function handleFileChanged() {
 	generateManifest(mode)
 }
 
-function generateManifest(mode) {
-	const fileContent = fs.readFileSync(
-		path.resolve(__dirname, baseManifestPath),
-		'utf8'
-	)
+async function generateManifest(mode) {
+	const fileContent = await fsPromise.readFile(path.resolve(__dirname, baseManifestPath), 'utf8')
+
+	console.log(`[path][${path.resolve(__dirname, baseManifestPath)}]`)
+	console.log('[start:fileContent]' + fileContent + '[end:fileContent]')
 
 	let baseManifest = {}
 
@@ -30,6 +31,7 @@ function generateManifest(mode) {
 	} catch (e) {
 		if (e instanceof SyntaxError) {
 			console.log('\n')
+			console.log('キャッチされたエラー')
 			console.error(e.stack)
 			console.log('\n')
 			return
@@ -38,19 +40,14 @@ function generateManifest(mode) {
 		}
 	}
 
-	const outputManifest =
-		mode === 'development'
-			? baseManifest
-			: deleteWebAccessibleResourcesProp(baseManifest)
+	const outputManifest = mode === 'development' ? baseManifest : deleteWebAccessibleResourcesProp(baseManifest)
 
 	fs.writeFileSync(
 		path.resolve(__dirname, outputManifestPath),
 		JSON.stringify(outputManifest, null, outputManifestIndent)
 	)
 
-	console.log(
-		`変更が${mode}モードで${outputManifestPath}に正常に書き込まれました。(${getJapaneseCurrentTimeString()})`
-	)
+	console.log(`変更が${mode}モードで${outputManifestPath}に正常に書き込まれました。(${getJapaneseCurrentTimeString()})`)
 }
 
 function deleteWebAccessibleResourcesProp(e) {
