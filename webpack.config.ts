@@ -30,6 +30,7 @@ module.exports = (env: any, argv: Argv) => {
 					'content-script': path.join(__dirname, './src/content-script/index.ts'),
 					background: path.join(__dirname, './src/background/index.ts'),
 					options: { import: path.join(__dirname, './src/options/index.tsx'), dependOn: 'react-vendors' },
+					popup: { import: path.join(__dirname, './src/popup/index.tsx'), dependOn: 'react-vendors' },
 					'react-vendors': ['react', 'react-dom'],
 			  }
 			: testServerPath,
