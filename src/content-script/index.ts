@@ -1,9 +1,8 @@
-import { getChromeStorage } from '@storage/getChromeStorage'
+import { ChromeStorageKey } from '@models/ChromeStorage'
 import { message as messageProtocol } from '@root/message/message'
-import { ChromeStorage, ChromeStorageKey } from '@models/ChromeStorage'
-import { v4 as uuid } from 'uuid'
+import { getChromeStorage } from '@storage/getChromeStorage'
 import { setChromeStorage } from '@storage/setChromeStorage'
-import { isHtmlElement } from '@utils/isHtmlElement'
+import { v4 as uuid } from 'uuid'
 
 /*
 
@@ -58,6 +57,9 @@ const TEXT_REFERENCE_ATTRIBUTE_NAME = 'data-text-content-' + uuid()
 const INSERTED_STYLE_ELMENET_CLASSNAME = CLASSNAME_PREFIX + 'style'
 const INSERTED_ELEMENT_CLASSNAME = CLASSNAME_PREFIX + 'inserted-element'
 
+/** キーがスタイルで、値がクラス名。スタイルが同じならクラス名は同じのを使う(節約のため)*/
+const STYLE_MAP = new Map<string, string>()
+
 function generateReplaceElementStyleClassname() {
 	return CLASSNAME_PREFIX + 'span-' + uuid()
 }
@@ -66,6 +68,7 @@ changeCodeToSpan()
 
 chrome.runtime.onMessage.addListener((message) => {
 	if (message === messageProtocol.historyChanged) {
+		STYLE_MAP.clear()
 		changeCodeToSpan()
 	}
 
@@ -74,20 +77,40 @@ chrome.runtime.onMessage.addListener((message) => {
 
 chrome.storage.local.onChanged.addListener((changes) => {
 	const changedDataKeys = Object.keys(changes)
-	const targetKeys: ChromeStorageKey[] = ['extractAttributes', 'extractStyleKey', 'keepOriginalKeyword']
+	const restartTargetKeys: ChromeStorageKey[] = ['extractAttributes', 'extractStyleKey']
+	const changeKeppOriginalKey: ChromeStorageKey = 'keepOriginalKeyword'
+	const isKeepOriginalChanged = changedDataKeys.includes(changeKeppOriginalKey)
 
-	if (targetKeys.some((e) => changedDataKeys.includes(e))) {
+	if (restartTargetKeys.some((e) => changedDataKeys.includes(e))) {
 		changeCodeToSpan()
 	}
+	if (isKeepOriginalChanged) {
+		handleChangeKeepOriginalKeyword()
+	}
 })
+
+async function handleChangeKeepOriginalKeyword() {
+	const { keepOriginalKeyword } = await getChromeStorage()
+
+	removeAllOldStyleElement()
+
+	setStyle({ keepOriginalKeyword: keepOriginalKeyword })
+
+	document.querySelectorAll(`.${INSERTED_ELEMENT_CLASSNAME}`).forEach((insertedElement) => {
+		const originalKeyword = insertedElement.getAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME)
+
+		if (originalKeyword === null) {
+			return
+		}
+
+		insertedElement.textContent = originalKeyword
+	})
+}
 
 async function changeCodeToSpan() {
 	const { extractAttributes, extractStyleKey, keepOriginalKeyword } = await getChromeStorage()
 
-	removeAllInsertedElement()
-
-	/** キーがスタイルで、値がクラス名。スタイルが同じならクラス名は同じのを使う(節約のため)*/
-	const STYLE_MAP = new Map<string, string>()
+	document.querySelectorAll(`.${INSERTED_ELEMENT_CLASSNAME}`).forEach((e) => e.remove())
 
 	const codeElements = [...document.querySelectorAll('code')]
 	const codeElementsInSentence = codeElements.filter((codeElement) => codeElement.children.length === 0)
@@ -114,40 +137,53 @@ async function changeCodeToSpan() {
 		copyAttributes({ extractAttributes, from: codeElement, to: replaceElement })
 
 		codeElement.style.setProperty('display', 'none')
+		codeElement.parentElement?.append(replaceElement)
 		codeElement.insertAdjacentElement('afterend', replaceElement)
 	})
 
 	// 以前追加した<style>を削除
-	;[...document.querySelectorAll('.' + INSERTED_STYLE_ELMENET_CLASSNAME)].forEach((e) => e.remove())
+	removeAllOldStyleElement()
 
+	setStyle({ keepOriginalKeyword: keepOriginalKeyword })
+}
+
+function removeAllOldStyleElement() {
+	const styleElements = [...document.querySelectorAll('.' + INSERTED_STYLE_ELMENET_CLASSNAME)]
+
+	styleElements.forEach((e) => e.remove())
+}
+
+function setStyle({ keepOriginalKeyword }: { keepOriginalKeyword: boolean }) {
 	// 集約したスタイルをドキュメントに挿入する
 	STYLE_MAP.forEach((value, key) => {
 		const [className, style] = [value, key]
 
 		const styleElement = document.createElement('style')
-		const styleElementContent = keepOriginalKeyword
-			? `
-			.${className}::before {
-				content:attr(${TEXT_REFERENCE_ATTRIBUTE_NAME});
-				${style}
+		const styleElementContent: string = (() => {
+			if (keepOriginalKeyword) {
+				return `
+					.${className}::before {
+						content:attr(${TEXT_REFERENCE_ATTRIBUTE_NAME});
+						${style}
+					}
+					.${className} {
+						color: transparent;
+						font-size: 0px;
+					}
+			`
+			} else {
+				return `
+					.${className} {
+						${style}
+					}
+				`
 			}
-			.${className} {
-				color: transparent;
-				font-size: 0px;
-			}`.replace(/^\t\t\t/gm, '')
-			: `
-			.${className} {
-				${style}
-			}`.replace(/^\t\t\t/gm, '')
+		})().replace(/^\t{5}/gm, '')
 
 		styleElement.textContent = styleElementContent
 		styleElement.classList.add(INSERTED_STYLE_ELMENET_CLASSNAME)
 		document.head.append(styleElement)
 	})
-}
-
-function removeAllInsertedElement() {
-	document.querySelectorAll(`.${INSERTED_ELEMENT_CLASSNAME}`).forEach((e) => e.remove())
 }
 
 function constructStyleValue(style: CSSStyleDeclaration, extractStyleKey: string[]) {
