@@ -5,6 +5,11 @@
 	"description": "プログラミングのドキュメントを翻訳したときに、文章内の<code>要素が無視されて翻訳されないのを修正します。なるべく文章内のキーワードのみをターゲットにするようにしています。",
 
 	"homepage_url": "https://github.com/matoritori/code-translate",
+
+	"icons": {
+		"128": "logo.png"
+	},
+
 	"content_security_policy": {
 		"extension_pages": "default-src 'self'"
 	},
@@ -29,5 +34,10 @@
 		}
 	],
 
-	"options_page": "options.html"
+	"options_page": "options.html",
+
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": { "32": "logo.png" }
+	}
 }
