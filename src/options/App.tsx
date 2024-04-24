@@ -53,11 +53,3 @@ export function App(props: Props) {
 		setExtractAttributesString(event.target.value)
 	}
 }
-
-interface NamedTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-	nameAttributeValue: ChromeStorageKey
-}
-
-function NamedTextarea({ nameAttributeValue, ...otherProps }: NamedTextareaProps) {
-	return <textarea name={nameAttributeValue} {...otherProps} />
-}
