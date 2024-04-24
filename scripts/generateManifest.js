@@ -21,9 +21,6 @@ function handleFileChanged() {
 async function generateManifest(mode) {
 	const fileContent = await fsPromise.readFile(path.resolve(__dirname, baseManifestPath), 'utf8')
 
-	console.log(`[path][${path.resolve(__dirname, baseManifestPath)}]`)
-	console.log('[start:fileContent]' + fileContent + '[end:fileContent]')
-
 	let baseManifest = {}
 
 	try {
