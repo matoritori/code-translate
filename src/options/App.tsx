@@ -43,7 +43,9 @@ export function App(props: Props) {
 			<button onClick={handleExtractAttributesSaveClick}>保存</button>
 
 			<h1>補足されたスタイルのエラー</h1>
+			<button onClick={deleteStyleGetErrorLog}>エラーのログをすべて削除</button>
 			<div>
+				{styleGetErrorLogList.length === 0 && 'エラーは記録されていません'}
 				{styleGetErrorLogList.map((errorLog) => {
 					return (
 						<div className='error-row' key={errorLog.id}>
@@ -73,5 +75,9 @@ export function App(props: Props) {
 
 	function handleAttributesChange(event: ChangeEvent<HTMLTextAreaElement>) {
 		setExtractAttributesString(event.target.value)
+	}
+
+	function deleteStyleGetErrorLog() {
+		setChromeStorage('styleGetErrorLogList', [])
 	}
 }
