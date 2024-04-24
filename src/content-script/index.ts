@@ -49,19 +49,26 @@ import { v4 as uuid } from 'uuid'
 
 */
 
-const CLASSNAME_PREFIX = 'code-translate-'
+const NAME_PREFIX = 'code-translate-'
 /**
  * ::beforeの中身用
  */
-const TEXT_REFERENCE_ATTRIBUTE_NAME = 'data-text-content-' + uuid()
-const INSERTED_STYLE_ELMENET_CLASSNAME = CLASSNAME_PREFIX + 'style'
-const INSERTED_ELEMENT_CLASSNAME = CLASSNAME_PREFIX + 'inserted-element'
+const TEXT_REFERENCE_ATTRIBUTE_NAME = NAME_PREFIX + 'data-text-content-' + uuid()
+const INSERTED_STYLE_ELMENET_CLASSNAME = NAME_PREFIX + 'style'
+const REPLACE_ELEMENT_ATTRIBUTE_NAME = NAME_PREFIX + 'data-replace-element'
+const REPLACED_CODE_CLASSNAME = NAME_PREFIX + 'replaced-code'
+const INDICATE_ORIGIN_ELEMENT_ATTRIBUTE_NAME = NAME_PREFIX + 'data-replaced'
+const INDICATE_REPLACED_ELEMENT_ATTRIBUTE_NAME = NAME_PREFIX + 'data-replaced-by'
 
 /** キーがスタイルで、値がクラス名。スタイルが同じならクラス名は同じのを使う(節約のため)*/
 const STYLE_MAP = new Map<string, string>()
 
 function generateReplaceElementStyleClassname() {
-	return CLASSNAME_PREFIX + 'span-' + uuid()
+	return NAME_PREFIX + 'span-' + uuid()
+}
+
+function generateReplacePairId() {
+	return NAME_PREFIX + 'replace-pair-' + uuid()
 }
 
 changeCodeToSpan()
@@ -77,17 +84,60 @@ chrome.runtime.onMessage.addListener((message) => {
 
 chrome.storage.local.onChanged.addListener((changes) => {
 	const changedDataKeys = Object.keys(changes)
-	const restartTargetKeys: ChromeStorageKey[] = ['extractAttributes', 'extractStyleKey']
+	const restyleKeys: ChromeStorageKey[] = ['extractAttributes', 'extractStyleKey']
 	const changeKeppOriginalKey: ChromeStorageKey = 'keepOriginalKeyword'
 	const isKeepOriginalChanged = changedDataKeys.includes(changeKeppOriginalKey)
 
-	if (restartTargetKeys.some((e) => changedDataKeys.includes(e))) {
-		changeCodeToSpan()
+	if (restyleKeys.some((e) => changedDataKeys.includes(e))) {
+		restyleReplaceElements()
 	}
 	if (isKeepOriginalChanged) {
 		handleChangeKeepOriginalKeyword()
 	}
 })
+
+async function restyleReplaceElements() {
+	STYLE_MAP.clear()
+	removeAllOldStyleElement()
+
+	const { extractAttributes, extractStyleKey, keepOriginalKeyword } = await getChromeStorage()
+
+	const replaceElements = document.querySelectorAll(`[${REPLACE_ELEMENT_ATTRIBUTE_NAME}]`)
+
+	replaceElements.forEach((replaceElement) => {
+		replaceElement.setAttribute('class', '')
+		replaceElement.setAttribute(REPLACE_ELEMENT_ATTRIBUTE_NAME, '')
+
+		const originCodeElementId = replaceElement.getAttribute(INDICATE_ORIGIN_ELEMENT_ATTRIBUTE_NAME)
+		if (originCodeElementId === null) {
+			return
+		}
+
+		const codeElement = document.querySelector(`[${INDICATE_REPLACED_ELEMENT_ATTRIBUTE_NAME}="${originCodeElementId}"]`)
+		if (codeElement === null || !(codeElement instanceof HTMLElement)) {
+			return
+		}
+
+		codeElement.style.removeProperty('display')
+
+		const extractedCodeStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey)
+		const savedStylingClassname = STYLE_MAP.get(extractedCodeStyle)
+
+		if (savedStylingClassname !== undefined) {
+			replaceElement.classList.add(savedStylingClassname)
+		} else {
+			const className = generateReplaceElementStyleClassname()
+			replaceElement.classList.add(className)
+			STYLE_MAP.set(extractedCodeStyle, className)
+		}
+
+		codeElement.style.setProperty('display', 'none')
+
+		copyAttributes({ extractAttributes, from: codeElement, to: replaceElement })
+	})
+
+	setStyle({ keepOriginalKeyword: keepOriginalKeyword })
+}
 
 async function handleChangeKeepOriginalKeyword() {
 	const { keepOriginalKeyword } = await getChromeStorage()
@@ -96,7 +146,7 @@ async function handleChangeKeepOriginalKeyword() {
 
 	setStyle({ keepOriginalKeyword: keepOriginalKeyword })
 
-	document.querySelectorAll(`.${INSERTED_ELEMENT_CLASSNAME}`).forEach((insertedElement) => {
+	document.querySelectorAll(`[${REPLACE_ELEMENT_ATTRIBUTE_NAME}]`).forEach((insertedElement) => {
 		const originalKeyword = insertedElement.getAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME)
 
 		if (originalKeyword === null) {
@@ -110,35 +160,36 @@ async function handleChangeKeepOriginalKeyword() {
 async function changeCodeToSpan() {
 	const { extractAttributes, extractStyleKey, keepOriginalKeyword } = await getChromeStorage()
 
-	document.querySelectorAll(`.${INSERTED_ELEMENT_CLASSNAME}`).forEach((e) => e.remove())
-
-	const codeElements = [...document.querySelectorAll('code')]
-	const codeElementsInSentence = codeElements.filter((codeElement) => codeElement.children.length === 0)
+	const codeElementsInSentence = [...document.querySelectorAll(`code:not(.${REPLACED_CODE_CLASSNAME})`)]
+		.filter((e): e is HTMLElement => e instanceof HTMLElement)
+		.filter((codeElement) => codeElement.children.length === 0)
 
 	codeElementsInSentence.forEach((codeElement) => {
 		const replaceElement = document.createElement('span')
-		replaceElement.classList.add(INSERTED_ELEMENT_CLASSNAME)
-		const replaceElementStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey)
-		const replaceElementText = codeElement.textContent ?? ''
+		const replacePairId = generateReplacePairId()
+		const extractedCodeStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey)
+		const codeTextContent = codeElement.textContent ?? ''
+		const savedStylingClassname = STYLE_MAP.get(extractedCodeStyle)
 
-		if (STYLE_MAP.has(replaceElementStyle)) {
-			const className = STYLE_MAP.get(replaceElementStyle)
-			if (className !== undefined) {
-				replaceElement.classList.add(className)
-			}
+		codeElement.classList.add(REPLACED_CODE_CLASSNAME)
+		codeElement.style.setProperty('display', 'none')
+		codeElement.insertAdjacentElement('afterend', replaceElement)
+		codeElement.setAttribute(INDICATE_REPLACED_ELEMENT_ATTRIBUTE_NAME, replacePairId)
+
+		replaceElement.setAttribute(REPLACE_ELEMENT_ATTRIBUTE_NAME, '')
+		replaceElement.textContent = codeTextContent
+		replaceElement.setAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME, codeTextContent)
+		replaceElement.setAttribute(INDICATE_ORIGIN_ELEMENT_ATTRIBUTE_NAME, replacePairId)
+
+		if (savedStylingClassname !== undefined) {
+			replaceElement.classList.add(savedStylingClassname)
 		} else {
 			const className = generateReplaceElementStyleClassname()
 			replaceElement.classList.add(className)
-			STYLE_MAP.set(replaceElementStyle, className)
+			STYLE_MAP.set(extractedCodeStyle, className)
 		}
 
-		replaceElement.textContent = replaceElementText
-		replaceElement.setAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME, replaceElementText)
 		copyAttributes({ extractAttributes, from: codeElement, to: replaceElement })
-
-		codeElement.style.setProperty('display', 'none')
-		codeElement.parentElement?.append(replaceElement)
-		codeElement.insertAdjacentElement('afterend', replaceElement)
 	})
 
 	// 以前追加した<style>を削除
