@@ -101,6 +101,8 @@ async function restyleReplaceElements() {
 	STYLE_MAP.clear()
 	removeAllOldStyleElement()
 
+	const styleGetErrorLogSet = new Set<string>()
+
 	const { extractAttributes, extractStyleKey, keepOriginalKeyword } = await getChromeStorage()
 
 	const replaceElements = document.querySelectorAll(`[${REPLACE_ELEMENT_ATTRIBUTE_NAME}]`)
@@ -121,7 +123,7 @@ async function restyleReplaceElements() {
 
 		codeElement.style.removeProperty('display')
 
-		const extractedCodeStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey)
+		const extractedCodeStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey, styleGetErrorLogSet)
 		const savedStylingClassname = STYLE_MAP.get(extractedCodeStyle)
 
 		if (savedStylingClassname !== undefined) {
@@ -138,6 +140,8 @@ async function restyleReplaceElements() {
 	})
 
 	setStyle({ keepOriginalKeyword: keepOriginalKeyword })
+
+	addStyleGetErrorLogToStorage(styleGetErrorLogSet)
 }
 
 async function handleChangeKeepOriginalKeyword() {
@@ -165,10 +169,15 @@ async function changeCodeToSpan() {
 		.filter((e): e is HTMLElement => e instanceof HTMLElement)
 		.filter((codeElement) => codeElement.children.length === 0)
 
+	/**
+	 * 改行したほうが見やすそうな場合は\nで区切る。後で\nでsplitしてstring[]にする
+	 */
+	const styleGetErrorLogSet = new Set<string>()
+
 	codeElementsInSentence.forEach((codeElement) => {
 		const replaceElement = document.createElement('span')
 		const replacePairId = generateReplacePairId()
-		const extractedCodeStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey)
+		const extractedCodeStyle = constructStyleValue(getComputedStyle(codeElement), extractStyleKey, styleGetErrorLogSet)
 		const codeTextContent = codeElement.textContent ?? ''
 		const savedStylingClassname = STYLE_MAP.get(extractedCodeStyle)
 
@@ -197,12 +206,34 @@ async function changeCodeToSpan() {
 	removeAllOldStyleElement()
 
 	setStyle({ keepOriginalKeyword: keepOriginalKeyword })
+
+	addStyleGetErrorLogToStorage(styleGetErrorLogSet)
 }
 
 function removeAllOldStyleElement() {
 	const styleElements = [...document.querySelectorAll('.' + INSERTED_STYLE_ELMENET_CLASSNAME)]
 
 	styleElements.forEach((e) => e.remove())
+}
+
+/**
+ *
+ * @param errorLogSet stringは改行したほうが見やすそうな場合は\nで区切る。後で\nでsplitしてstring[]にする
+ */
+function addStyleGetErrorLogToStorage(errorLogSet: Set<string>) {
+	if (errorLogSet.size > 0) {
+		const asStorageErrorLog: StyleGetErrorLog[] = [...errorLogSet].map((str) => {
+			return {
+				id: uuid(),
+				messages: str.split('\n'),
+			}
+		})
+
+		getChromeStorage().then(({ styleGetErrorLogList }) => {
+			const log = [...asStorageErrorLog, ...styleGetErrorLogList].splice(0, 30)
+			setChromeStorage('styleGetErrorLogList', log)
+		})
+	}
 }
 
 function setStyle({ keepOriginalKeyword }: { keepOriginalKeyword: boolean }) {
@@ -238,35 +269,23 @@ function setStyle({ keepOriginalKeyword }: { keepOriginalKeyword: boolean }) {
 	})
 }
 
-function constructStyleValue(style: CSSStyleDeclaration, extractStyleKey: string[]) {
-	const errorLog = new Set<StyleGetErrorLog>()
-
+function constructStyleValue(style: CSSStyleDeclaration, extractStyleKey: string[], errorLogSet: Set<string>) {
 	const result = extractStyleKey
 		.flatMap((styleName) => {
 			const styleValue = style.getPropertyValue(styleName)
 
 			if (styleValue === '') {
-				const errorMessages: string[] = [
-					`${styleName}がcode要素から取得できませんでした。このスタイルは置き換えられた要素に設定されません。`,
-					document.location.href,
-				]
-				errorLog.add({
-					id: uuid(),
-					messages: errorMessages,
-				})
+				errorLogSet.add(
+					`${styleName}がcode要素から取得できませんでした。このスタイルは置き換えられた要素に設定されません。` +
+						'\n' +
+						document.location.href
+				)
 				return []
 			} else {
 				return `${styleName}: ${style.getPropertyValue(styleName)};`
 			}
 		})
 		.join('\n\t')
-
-	if (errorLog.size > 0) {
-		getChromeStorage().then(({ styleGetErrorLogList }) => {
-			const log = [...errorLog, ...styleGetErrorLogList].splice(0, 30)
-			setChromeStorage('styleGetErrorLogList', log)
-		})
-	}
 
 	return result
 }
