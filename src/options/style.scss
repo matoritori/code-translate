@@ -1,5 +1,10 @@
+body {
+	font-size: 16px;
+}
+
 h1 {
 	margin-top: 30px;
+	font-size: 1.5em;
 }
 
 textarea {
@@ -17,4 +22,14 @@ textarea.main {
 	width: 500px;
 	height: 200px;
 	display: block;
+}
+
+.error-row {
+	padding: 10px 0px;
+	border-bottom: solid 1px #555;
+}
+
+.error-row:last-child {
+	padding: 10px 0px;
+	border-bottom: none;
 }
