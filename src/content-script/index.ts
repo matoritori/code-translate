@@ -1,4 +1,5 @@
 import { ChromeStorageKey } from '@models/ChromeStorage'
+import { StyleGetErrorLog } from '@models/StyleGetErrorLog'
 import { message as messageProtocol } from '@root/message/message'
 import { getChromeStorage } from '@storage/getChromeStorage'
 import { setChromeStorage } from '@storage/setChromeStorage'
@@ -238,15 +239,21 @@ function setStyle({ keepOriginalKeyword }: { keepOriginalKeyword: boolean }) {
 }
 
 function constructStyleValue(style: CSSStyleDeclaration, extractStyleKey: string[]) {
-	const errorLog = new Set<string>()
+	const errorLog = new Set<StyleGetErrorLog>()
 
 	const result = extractStyleKey
 		.flatMap((styleName) => {
 			const styleValue = style.getPropertyValue(styleName)
 
 			if (styleValue === '') {
-				const errorMessage = `${styleName}がcode要素から取得できませんでした。このスタイルは置き換えられた要素に設定されません。`
-				errorLog.add(errorMessage)
+				const errorMessages: string[] = [
+					`${styleName}がcode要素から取得できませんでした。このスタイルは置き換えられた要素に設定されません。`,
+					document.location.href,
+				]
+				errorLog.add({
+					id: uuid(),
+					messages: errorMessages,
+				})
 				return []
 			} else {
 				return `${styleName}: ${style.getPropertyValue(styleName)};`
@@ -255,9 +262,9 @@ function constructStyleValue(style: CSSStyleDeclaration, extractStyleKey: string
 		.join('\n\t')
 
 	if (errorLog.size > 0) {
-		getChromeStorage().then(({ styleGetErrorLog }) => {
-			const log = [...errorLog, ...styleGetErrorLog].splice(0, 30)
-			setChromeStorage('styleGetErrorLog', log)
+		getChromeStorage().then(({ styleGetErrorLogList }) => {
+			const log = [...errorLog, ...styleGetErrorLogList].splice(0, 30)
+			setChromeStorage('styleGetErrorLogList', log)
 		})
 	}
 

@@ -1,3 +1,4 @@
+import { StyleGetErrorLog, isStyleGetErrorLogList } from '@models/StyleGetErrorLog'
 import { isArrayEvery } from '@utils/isArrayEvery'
 import { isBoolean } from '@utils/isBoolean'
 import { isString } from '@utils/isString'
@@ -6,7 +7,7 @@ export type ChromeStorage = {
 	extractStyleKey: string[]
 	extractAttributes: string[]
 	keepOriginalKeyword: boolean
-	styleGetErrorLog: string[]
+	styleGetErrorLogList: StyleGetErrorLog[]
 }
 
 export type ChromeStorageKey = keyof ChromeStorage
@@ -15,7 +16,7 @@ export function isChromeStorage(e: any): e is ChromeStorage {
 	return (
 		isArrayEvery(e?.extractStyleKey, isString) &&
 		isArrayEvery(e?.extractAttributes, isString) &&
-		isArrayEvery(e?.styleGetErrorLog, isString) &&
+		isStyleGetErrorLogList(e?.styleGetErrorLogList) &&
 		isBoolean(e?.keepOriginalKeyword)
 	)
 }
@@ -36,7 +37,7 @@ export function INITIAL_CHROME_STORAGE(): ChromeStorage {
 		],
 		extractAttributes: [],
 		keepOriginalKeyword: true,
-		styleGetErrorLog: [],
+		styleGetErrorLogList: [],
 	}
 }
 
@@ -44,7 +45,7 @@ export const CHROME_STORAGE_KEYS: Readonly<ChromeStorageKey[]> = [
 	'extractStyleKey',
 	'extractAttributes',
 	'keepOriginalKeyword',
-	'styleGetErrorLog',
+	'styleGetErrorLogList',
 ]
 
 export function isChromeStorageKey(e: any): e is ChromeStorageKey {
@@ -59,6 +60,6 @@ export function isCorrectChromeStorageValue<K extends keyof ChromeStorage>(
 		(key === 'extractStyleKey' && isArrayEvery(value, isString)) ||
 		(key === 'extractAttributes' && isArrayEvery(value, isString)) ||
 		(key === 'keepOriginalKeyword' && isBoolean(value)) ||
-		(key === 'styleGetErrorLog' && isArrayEvery(value, isString))
+		(key === 'styleGetErrorLogList' && isStyleGetErrorLogList(value))
 	)
 }
