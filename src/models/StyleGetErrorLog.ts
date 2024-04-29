@@ -10,6 +10,6 @@ export function isStyleGetErrorLog(e: any): e is StyleGetErrorLog {
 	return isString(e?.id) && isArrayEvery(e?.messages, isString)
 }
 
-export function isStyleGetErrorLogList(e: any): e is StyleGetErrorLog {
+export function isStyleGetErrorLogList(e: any): e is StyleGetErrorLog[] {
 	return isArrayEvery(e, isStyleGetErrorLog)
 }
