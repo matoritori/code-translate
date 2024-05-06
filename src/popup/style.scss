@@ -12,12 +12,27 @@ h1 {
 }
 
 input[type='checkbox'] {
-	scale: 1.5;
+	width: 20px;
+	height: 20px;
 	margin-left: 10px;
 }
 
-aside {
+label {
+	display: flex;
+	align-items: center;
+}
+
+hr {
 	margin-top: 10px;
-	font-size: 90%;
-	color: #444;
+	margin-bottom: 10px;
+}
+
+details {
+	margin-top: 10px;
+}
+
+.warn-for-exec-replace {
+	margin-top: 5px;
+	margin-left: 5px;
+	font-size: small;
 }

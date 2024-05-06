@@ -4,3 +4,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
 	const { tabId } = details
 	chrome.tabs.sendMessage(tabId, message.historyChanged).catch()
 })
+
+chrome.action.setIcon({
+	path: '../icon16checked.png',
+})

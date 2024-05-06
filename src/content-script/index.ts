@@ -72,12 +72,16 @@ function generateReplacePairId() {
 	return NAME_PREFIX + 'replace-pair-' + uuid()
 }
 
-changeCodeToSpan()
+getChromeStorage().then((storage) => {
+	changeCodeToSpan(storage.execReplace)
+})
 
 chrome.runtime.onMessage.addListener((message) => {
 	if (message === messageProtocol.historyChanged) {
 		STYLE_MAP.clear()
-		changeCodeToSpan()
+		getChromeStorage().then((storage) => {
+			changeCodeToSpan(storage.execReplace)
+		})
 	}
 
 	return undefined
@@ -87,13 +91,21 @@ chrome.storage.local.onChanged.addListener((changes) => {
 	const changedDataKeys = Object.keys(changes)
 	const restyleKeys: ChromeStorageKey[] = ['extractAttributes', 'extractStyleKey']
 	const changeKeppOriginalKey: ChromeStorageKey = 'keepOriginalKeyword'
+	const execReplaceKey: ChromeStorageKey = 'execReplace'
 	const isKeepOriginalChanged = changedDataKeys.includes(changeKeppOriginalKey)
+	const isShouldRestyle = restyleKeys.some((e) => changedDataKeys.includes(e))
+	const isExecReplaceChanged = changedDataKeys.includes(execReplaceKey)
 
-	if (restyleKeys.some((e) => changedDataKeys.includes(e))) {
+	if (isShouldRestyle) {
 		restyleReplaceElements()
 	}
 	if (isKeepOriginalChanged) {
 		handleChangeKeepOriginalKeyword()
+	}
+	if (isExecReplaceChanged) {
+		getChromeStorage().then((storage) => {
+			changeCodeToSpan(storage.execReplace)
+		})
 	}
 })
 
@@ -162,7 +174,9 @@ async function handleChangeKeepOriginalKeyword() {
 	})
 }
 
-async function changeCodeToSpan() {
+async function changeCodeToSpan(execReplace: boolean) {
+	if (!execReplace) return
+
 	const { extractAttributes, extractStyleKey, keepOriginalKeyword } = await getChromeStorage()
 
 	const codeElementsInSentence = [...document.querySelectorAll(`code:not(.${REPLACED_CODE_CLASSNAME})`)]
@@ -200,6 +214,10 @@ async function changeCodeToSpan() {
 		}
 
 		copyAttributes({ extractAttributes, from: codeElement, to: replaceElement })
+
+		new MutationObserver((mutations) => {
+			console.log('MutationObserver', { replaceElement, mutations })
+		}).observe(replaceElement, { attributes: true })
 	})
 
 	// 以前追加した<style>を削除

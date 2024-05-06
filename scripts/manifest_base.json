@@ -1,12 +1,13 @@
 {
 	"manifest_version": 3,
 	"name": "コードを文脈的に翻訳",
-	"version": "1",
+	"version": "2",
 	"description": "プログラミングのドキュメントを翻訳したときに、文章内の<code>要素が無視されて翻訳されないのを修正します。なるべく文章内のキーワードのみをターゲットにするようにしています。",
 
 	"homepage_url": "https://github.com/matoritori/code-translate",
 
 	"icons": {
+		"16": "icon16.png",
 		"128": "logo.png"
 	},
 
@@ -38,6 +39,6 @@
 
 	"action": {
 		"default_popup": "popup.html",
-		"default_icon": { "32": "logo.png" }
+		"default_icon": { "32": "logo.png", "24": "icon24.png", "16": "icon16.png" }
 	}
 }

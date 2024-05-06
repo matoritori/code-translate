@@ -4,8 +4,9 @@ import { isBoolean } from '@utils/isBoolean'
 import { isString } from '@utils/isString'
 
 export type ChromeStorage = {
-	extractStyleKey: string[]
+	execReplace: boolean
 	extractAttributes: string[]
+	extractStyleKey: string[]
 	keepOriginalKeyword: boolean
 	styleGetErrorLogList: StyleGetErrorLog[]
 }
@@ -14,6 +15,7 @@ export type ChromeStorageKey = keyof ChromeStorage
 
 export function isChromeStorage(e: any): e is ChromeStorage {
 	return (
+		isBoolean(e?.execReplace) &&
 		isArrayEvery(e?.extractStyleKey, isString) &&
 		isArrayEvery(e?.extractAttributes, isString) &&
 		isStyleGetErrorLogList(e?.styleGetErrorLogList) &&
@@ -23,6 +25,7 @@ export function isChromeStorage(e: any): e is ChromeStorage {
 
 export function INITIAL_CHROME_STORAGE(): ChromeStorage {
 	return {
+		execReplace: true,
 		extractStyleKey: [
 			'font-size',
 			'font-weight',
@@ -42,6 +45,7 @@ export function INITIAL_CHROME_STORAGE(): ChromeStorage {
 }
 
 export const CHROME_STORAGE_KEYS: Readonly<ChromeStorageKey[]> = [
+	'execReplace',
 	'extractStyleKey',
 	'extractAttributes',
 	'keepOriginalKeyword',
@@ -57,6 +61,7 @@ export function isCorrectChromeStorageValue<K extends keyof ChromeStorage>(
 	value: any
 ): value is ChromeStorage[K] {
 	return (
+		(key === 'execReplace' && isBoolean(value)) ||
 		(key === 'extractStyleKey' && isArrayEvery(value, isString)) ||
 		(key === 'extractAttributes' && isArrayEvery(value, isString)) ||
 		(key === 'keepOriginalKeyword' && isBoolean(value)) ||
