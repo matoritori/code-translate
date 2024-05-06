@@ -25,7 +25,7 @@ const INSERTED_STYLE_ELMENET_CLASSNAME = NAME_PREFIX + 'style'
 /**
  * 拡張機能が挿入したspan要素に付けるクラス名
  */
-const REPLACE_ELEMENT_ATTRIBUTE_NAME = NAME_PREFIX + 'data-replace-element'
+const REPLACE_ELEMENT_CLASSNAME = NAME_PREFIX + 'data-replace-element'
 
 /**
  * 置き換えられたcode要素に付けるクラス名
@@ -100,7 +100,7 @@ async function restyleReplaceElements() {
 
 	const { extractAttributes, extractStyleKey } = await getChromeStorage()
 
-	const replaceElements = document.querySelectorAll(`[${REPLACE_ELEMENT_ATTRIBUTE_NAME}]`)
+	const replaceElements = document.querySelectorAll(`.${REPLACE_ELEMENT_CLASSNAME}`)
 
 	replaceElements.forEach((replaceElement) => {
 		replaceElement.setAttribute('class', '')
@@ -172,7 +172,7 @@ async function changeCodeToSpan(execReplace: boolean) {
 		codeElement.insertAdjacentElement('afterend', replaceElement)
 		codeElement.setAttribute(INDICATE_REPLACED_ELEMENT_ATTRIBUTE_NAME, replacePairId)
 
-		replaceElement.setAttribute(REPLACE_ELEMENT_ATTRIBUTE_NAME, '')
+		replaceElement.classList.add(REPLACE_ELEMENT_CLASSNAME)
 		replaceElement.textContent = codeTextContent
 		replaceElement.setAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME, codeTextContent)
 		replaceElement.setAttribute(INDICATE_ORIGIN_ELEMENT_ATTRIBUTE_NAME, replacePairId)
