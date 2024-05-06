@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "codeをspanに置き換え",
-	"version": "2",
+	"version": "3",
 	"description": "プログラミングのドキュメントを翻訳したときに、文章内の<code>要素が無視されて翻訳されないのを修正します。なるべく文章内のキーワードのみをターゲットにするようにしています。拡張機能のオプションでcodeからコピーするスタイルを変更できます。",
 
 	"homepage_url": "https://github.com/matoritori/code-translate",
