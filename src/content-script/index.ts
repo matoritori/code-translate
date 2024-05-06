@@ -59,6 +59,12 @@ getChromeStorage().then((storage) => {
 	changeCodeToSpan(storage.execReplace)
 })
 
+/**
+ * ※削除しない
+ *
+ * SPAにおいて翻訳してから遷移した場合、要素の置き換えより翻訳が先になるので翻訳がおかしくなるが、
+ * 未翻訳のときは機能するので削除しない
+ */
 chrome.runtime.onMessage.addListener((message) => {
 	if (message === messageProtocol.historyChanged) {
 		STYLE_MAP.clear()
