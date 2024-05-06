@@ -200,17 +200,20 @@ async function changeCodeToSpan(execReplace: boolean) {
 
 		new MutationObserver((mutations) => {
 			const [mutation] = mutations
-			const { attributeName, target: element } = mutation
+			const { target: element } = mutation
 
-			if (attributeName === '_istranslated' && element instanceof HTMLElement) {
+			if (element instanceof HTMLElement) {
 				const originTextContent = element.getAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME)
 
 				// translate="no"なしでtextContentを置き換えると、瞬時に再翻訳される
 				element.setAttribute('translate', 'no')
 
-				element.textContent = originTextContent
+				// すぐに設定すると再翻訳されるので時間を置く
+				setTimeout(() => {
+					element.textContent = originTextContent
+				}, 1000)
 			}
-		}).observe(replaceElement, { attributes: true })
+		}).observe(replaceElement, { attributes: true, attributeFilter: ['_mstmutation', '_istranslated'] })
 	})
 
 	// 以前追加した<style>を削除
