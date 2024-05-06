@@ -22,12 +22,12 @@ export function App(props: Props) {
 
 	return (
 		<>
-			<h1>codeタグから抽出するスタイルのキー(一行ずつ)</h1>
+			<h1>codeタグから抽出するCSSのプロパティ名(一行ずつ)</h1>
 			<div>例</div>
 			<textarea className='example' defaultValue={STYLE_KEY_EXAMPLE} />
 			<aside>"font"は指定されていない可能性があるので非推奨です。代わりに"font-size"などを使ってください。</aside>
 			<label>
-				codeタグから抽出するスタイルのキー(一行ずつ):
+				codeタグから抽出するCSSのプロパティ名(一行ずつ):
 				<textarea className='main' value={extractStyleKeyString} onChange={handleStyleKeyChange} />
 			</label>
 			<button onClick={handleExtractStyleKeySaveClick}>保存</button>
@@ -37,7 +37,7 @@ export function App(props: Props) {
 			<textarea className='example' defaultValue={ATTRIBUTES_EXAMPLE} />
 
 			<label>
-				codeタグから抽出するスタイルのキー(一行ずつ):
+				codeタグから抽出する属性のキー(一行ずつ):
 				<textarea className='main' value={extractAttributesString} onChange={handleAttributesChange} />
 			</label>
 			<button onClick={handleExtractAttributesSaveClick}>保存</button>
