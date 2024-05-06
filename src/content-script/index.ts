@@ -6,6 +6,8 @@ import { constructStyleValue } from './constructStyleValue'
 import { copyAttributes } from './copyAttributes'
 import { addStyleGetErrorLogToStorage } from './addStyleGetErrorLogToStorage'
 import { isHTMLElement } from '@utils/isHTMLElement'
+import { resetClassname } from './resetClassname'
+import { initializeDisplayStyle } from './initializeDisplayStyle'
 
 const NAME_PREFIX = 'code-translate-'
 
@@ -20,7 +22,7 @@ const TEXT_REFERENCE_ATTRIBUTE_NAME = NAME_PREFIX + 'data-text-content-' + uuid(
 /**
  * codeを置き換えた要素(span)用の<style>要素のクラス名。削除するときに使う。
  */
-const INSERTED_STYLE_ELMENET_CLASSNAME = NAME_PREFIX + 'style'
+const INSERTED_STYLE_ELEMENT_CLASSNAME = NAME_PREFIX + 'style'
 
 /**
  * 拡張機能が挿入したspan要素に付けるクラス名
@@ -103,7 +105,8 @@ async function restyleReplaceElements() {
 	const replaceElements = document.querySelectorAll(`.${REPLACE_ELEMENT_CLASSNAME}`)
 
 	replaceElements.forEach((replaceElement) => {
-		replaceElement.setAttribute('class', '')
+		resetClassname(replaceElement)
+		replaceElement.classList.add(REPLACE_ELEMENT_CLASSNAME)
 
 		const originCodeElementId = replaceElement.getAttribute(INDICATE_ORIGIN_ELEMENT_ATTRIBUTE_NAME)
 		if (originCodeElementId === null) {
@@ -115,7 +118,7 @@ async function restyleReplaceElements() {
 			return
 		}
 
-		codeElement.style.removeProperty('display')
+		initializeDisplayStyle(codeElement)
 
 		const extractedCodeStyle = constructStyleValue({
 			style: getComputedStyle(codeElement),
@@ -213,7 +216,7 @@ async function changeCodeToSpan(execReplace: boolean) {
 }
 
 function removeAllOldStyleElement() {
-	const styleElements = [...document.querySelectorAll('.' + INSERTED_STYLE_ELMENET_CLASSNAME)]
+	const styleElements = [...document.querySelectorAll(`.${INSERTED_STYLE_ELEMENT_CLASSNAME}`)]
 
 	styleElements.forEach((e) => e.remove())
 }
@@ -225,12 +228,12 @@ function setStyle() {
 
 		const styleElement = document.createElement('style')
 		const styleElementContent: string = `
-				.${className} {
-					${style}
-				}`.replace(/^\t{4}/gm, '')
+			.${className} {
+				${style}
+			}`.replace(/^\t{3}/gm, '')
 
 		styleElement.textContent = styleElementContent
-		styleElement.classList.add(INSERTED_STYLE_ELMENET_CLASSNAME)
+		styleElement.classList.add(INSERTED_STYLE_ELEMENT_CLASSNAME)
 		document.head.append(styleElement)
 	})
 }
