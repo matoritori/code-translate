@@ -1,13 +1,13 @@
 import { ChromeStorageKey } from '@models/ChromeStorage'
 import { message as messageProtocol } from '@root/message/message'
 import { getChromeStorage } from '@storage/getChromeStorage'
+import { isHTMLElement } from '@utils/isHTMLElement'
 import { v4 as uuid } from 'uuid'
+import { addStyleGetErrorLogToStorage } from './addStyleGetErrorLogToStorage'
 import { constructStyleValue } from './constructStyleValue'
 import { copyAttributes } from './copyAttributes'
-import { addStyleGetErrorLogToStorage } from './addStyleGetErrorLogToStorage'
-import { isHTMLElement } from '@utils/isHTMLElement'
-import { resetClassname } from './resetClassname'
 import { initializeDisplayStyle } from './initializeDisplayStyle'
+import { resetClassname } from './resetClassname'
 
 const NAME_PREFIX = 'code-translate-'
 
@@ -200,20 +200,21 @@ async function changeCodeToSpan(execReplace: boolean) {
 
 		new MutationObserver((mutations) => {
 			const [mutation] = mutations
-			const { target: element } = mutation
+			const { type } = mutation
 
-			if (element instanceof HTMLElement) {
-				const originTextContent = element.getAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME)
+			if (type !== 'characterData') return
 
-				// translate="no"なしでtextContentを置き換えると、瞬時に再翻訳される
-				element.setAttribute('translate', 'no')
+			const originTextContent = replaceElement.getAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME)
 
-				// すぐに設定すると再翻訳されるので時間を置く
-				setTimeout(() => {
-					element.textContent = originTextContent
-				}, 1000)
-			}
-		}).observe(replaceElement, { attributes: true, attributeFilter: ['_mstmutation', '_istranslated'] })
+			if (replaceElement.textContent === originTextContent) return
+
+			replaceElement.setAttribute('translate', 'no') // translate="no"なしでtextContentを置き換えると、再翻訳されるので水の泡
+
+			// すぐに設定すると再翻訳されるので時間を置く
+			setTimeout(() => {
+				replaceElement.textContent = codeTextContent
+			}, 1000)
+		}).observe(replaceElement, { characterData: true, subtree: true }) // subtree:trueにしないと characterData イベントが起きない。subtreeだけでも何も起きない
 	})
 
 	// 以前追加した<style>を削除
