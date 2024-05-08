@@ -200,21 +200,31 @@ async function changeCodeToSpan(execReplace: boolean) {
 
 		new MutationObserver((mutations) => {
 			const [mutation] = mutations
-			const { type } = mutation
+			const { attributeName } = mutation
 
-			if (type !== 'characterData') return
-
+			// getAttributeせずに変数codeTextContentを使用した方が良いかも？
 			const originTextContent = replaceElement.getAttribute(TEXT_REFERENCE_ATTRIBUTE_NAME)
 
+			if (attributeName === 'translate') return
+			if (originTextContent === null) return
+			if (replaceElement.textContent === null) return
 			if (replaceElement.textContent === originTextContent) return
 
 			replaceElement.setAttribute('translate', 'no') // translate="no"なしでtextContentを置き換えると、再翻訳されるので水の泡
 
-			// すぐに設定すると再翻訳されるので時間を置く
+			// translate="no"直後にtextContentを設定すると再翻訳されるので時間を置く
 			setTimeout(() => {
-				replaceElement.textContent = codeTextContent
+				if (replaceElement.textContent === originTextContent) {
+					return
+				}
+
+				replaceElement.textContent = originTextContent
 			}, 1000)
-		}).observe(replaceElement, { characterData: true, subtree: true }) // subtree:trueにしないと characterData イベントが起きない。subtreeだけでも何も起きない
+		}).observe(replaceElement, {
+			characterData: true,
+			subtree: true, // characterDataをリッスンするのに必要
+			childList: true, // characterDataに引っかからない時があるので必要
+		})
 	})
 
 	// 以前追加した<style>を削除
