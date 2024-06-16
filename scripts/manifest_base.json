@@ -15,7 +15,7 @@
 		"extension_pages": "default-src 'self'"
 	},
 
-	"permissions": ["webNavigation", "storage"],
+	"permissions": ["webNavigation", "storage", "tabs"],
 
 	"background": {
 		"service_worker": "dist/background.js"
