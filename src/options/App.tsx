@@ -140,11 +140,12 @@ export function App(props: Props) {
 					<div className='mt-4'>
 						{styleGetErrorLogList.length === 0 && <div className='ml-1 mt-1'>エラーは記録されていません。</div>}
 
-						<div className='border border-gray-700 rounded-md dark:border-gray-300 w-fit'>
-							{styleGetErrorLogList.map((errorLog) => {
-								return (
-									<div
-										className={`
+						{styleGetErrorLogList.length > 0 && (
+							<div className='border border-gray-700 rounded-md dark:border-gray-300 w-fit'>
+								{styleGetErrorLogList.map((errorLog) => {
+									return (
+										<div
+											className={`
 										p-2
 										border-b
 										border-gray-700
@@ -153,15 +154,16 @@ export function App(props: Props) {
 
 										last:border-b-0
 									`}
-										key={errorLog.id}
-									>
-										{errorLog.messages.map((e, i) => (
-											<div key={i}>{e}</div>
-										))}
-									</div>
-								)
-							})}
-						</div>
+											key={errorLog.id}
+										>
+											{errorLog.messages.map((e, i) => (
+												<div key={i}>{e}</div>
+											))}
+										</div>
+									)
+								})}
+							</div>
+						)}
 					</div>
 				</div>
 			</section>
