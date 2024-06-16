@@ -5,12 +5,14 @@ import TerserPlugin from 'terser-webpack-plugin'
 type Argv = { mode?: Mode }
 
 module.exports = (env: any, argv: Argv) => {
+	const projectRootName = path.basename(__dirname)
 	const { isBuild, testServerPath, isServe, mode } = getParams(env, argv)
 
 	return {
 		...(isServe
 			? {
 					devServer: {
+						hot: true,
 						static: {
 							directory: testServerPath,
 						},
@@ -34,6 +36,7 @@ module.exports = (env: any, argv: Argv) => {
 					'react-vendors': ['react', 'react-dom'],
 			  }
 			: testServerPath,
+
 		output: isBuild
 			? {
 					path: path.resolve(__dirname, './extension/dist'),
@@ -55,8 +58,29 @@ module.exports = (env: any, argv: Argv) => {
 					exclude: /node_modules/,
 				},
 				{
-					test: /\.(sa|sc|c)ss$/i,
+					test: /\.(sa|sc)ss$/i,
 					use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+				},
+				{
+					test: /\.css$/i,
+					use: [
+						MiniCssExtractPlugin.loader,
+						'css-loader',
+						{
+							loader: 'postcss-loader',
+							options: {
+								postcssOptions: {
+									plugins: {
+										tailwindcss: {
+											config: `./${projectRootName}/tailwind.config.js`,
+										},
+										autoprefixer: {},
+										...(isBuild && mode == 'production' ? { cssnano: {} } : {}),
+									},
+								},
+							},
+						},
+					],
 				},
 			],
 		},

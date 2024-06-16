@@ -1,4 +1,7 @@
 {
-	"jest.jestCommandLine": "npm test -- [dirname] --config=[dirname]/jest.config.js",
-	"jest.runMode": "deferred"
+	"jest.jestCommandLine": "npm test -- code-translate --config=code-translate/jest.config.js",
+	"jest.runMode": "on-save",
+	"files.associations": {
+		"*.css": "tailwindcss"
+	}
 }
