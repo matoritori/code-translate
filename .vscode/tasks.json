@@ -4,9 +4,9 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "serve ui-test-options",
+			"label": "serve options",
 			"type": "shell",
-			"command": "npm run serve -- code-translate ui-test-options",
+			"command": "npm run serve -- code-translate src/options",
 			"problemMatcher": []
 		},
 
