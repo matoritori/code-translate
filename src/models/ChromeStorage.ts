@@ -2,12 +2,16 @@ import { StyleGetErrorLog, isStyleGetErrorLogList } from '@models/StyleGetErrorL
 import { isArrayEvery } from '@utils/isArrayEvery'
 import { isBoolean } from '@utils/isBoolean'
 import { isString } from '@utils/isString'
+import { ColorMode, isColorMode } from './ColorMode'
 
 export type ChromeStorage = {
 	execReplace: boolean
 	extractAttributes: string[]
 	extractStyleKey: string[]
 	styleGetErrorLogList: StyleGetErrorLog[]
+	disableUrl: string[]
+	enableUrl: string[]
+	extensionPageColorMode: ColorMode
 }
 
 export type ChromeStorageKey = keyof ChromeStorage
@@ -17,7 +21,10 @@ export function isChromeStorage(e: any): e is ChromeStorage {
 		isBoolean(e?.execReplace) &&
 		isArrayEvery(e?.extractStyleKey, isString) &&
 		isArrayEvery(e?.extractAttributes, isString) &&
-		isStyleGetErrorLogList(e?.styleGetErrorLogList)
+		isStyleGetErrorLogList(e?.styleGetErrorLogList) &&
+		isArrayEvery(e?.disableUrl, isString) &&
+		isArrayEvery(e?.enableUrl, isString) &&
+		isColorMode(e?.extensionPageColorMode)
 	)
 }
 
@@ -38,6 +45,9 @@ export function INITIAL_CHROME_STORAGE(): ChromeStorage {
 		],
 		extractAttributes: [],
 		styleGetErrorLogList: [],
+		enableUrl: [],
+		disableUrl: [],
+		extensionPageColorMode: 'system',
 	}
 }
 
@@ -46,6 +56,9 @@ export const CHROME_STORAGE_KEYS: Readonly<ChromeStorageKey[]> = [
 	'extractStyleKey',
 	'extractAttributes',
 	'styleGetErrorLogList',
+	'enableUrl',
+	'disableUrl',
+	'extensionPageColorMode',
 ]
 
 export function isChromeStorageKey(e: any): e is ChromeStorageKey {
@@ -60,6 +73,9 @@ export function isCorrectChromeStorageValue<K extends keyof ChromeStorage>(
 		(key === 'execReplace' && isBoolean(value)) ||
 		(key === 'extractStyleKey' && isArrayEvery(value, isString)) ||
 		(key === 'extractAttributes' && isArrayEvery(value, isString)) ||
-		(key === 'styleGetErrorLogList' && isStyleGetErrorLogList(value))
+		(key === 'styleGetErrorLogList' && isStyleGetErrorLogList(value)) ||
+		(key === 'enableUrl' && isArrayEvery(value, isString)) ||
+		(key === 'disableUrl' && isArrayEvery(value, isString)) ||
+		(key === 'extensionPageColorMode' && isColorMode(value))
 	)
 }
