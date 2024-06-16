@@ -1,6 +1,7 @@
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import path from 'path'
 import TerserPlugin from 'terser-webpack-plugin'
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
 
 type Argv = { mode?: Mode }
 
@@ -75,7 +76,6 @@ module.exports = (env: any, argv: Argv) => {
 											config: `./${projectRootName}/tailwind.config.js`,
 										},
 										autoprefixer: {},
-										...(isBuild && mode == 'production' ? { cssnano: {} } : {}),
 									},
 								},
 							},
@@ -113,6 +113,7 @@ module.exports = (env: any, argv: Argv) => {
 				new TerserPlugin({
 					extractComments: false,
 				}),
+				new CssMinimizerPlugin(),
 			],
 		},
 	}
