@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "プログラミングのドキュメントの翻訳を修正",
-	"version": "4.1",
+	"version": "5",
 	"description": "プログラミングのドキュメントを翻訳したときに、文章内の<code>要素が無視されて翻訳されないのを修正します。なるべく文章内のキーワードのみをターゲットにするようにしています。拡張機能のオプションでcodeからコピーするスタイルを変更できます。",
 
 	"homepage_url": "https://github.com/matoritori/code-translate",
