@@ -8,8 +8,6 @@ async function pageLoadListener(details: { tabId: number; url: string; frameType
 
 	if (frameType !== 'outermost_frame') return
 
-	console.log('pageLoadListener', details)
-
 	const storage = await getChromeStorage()
 
 	changeIcon({

@@ -10,7 +10,6 @@ interface Props {
 }
 
 export function changeIcon(props: Props) {
-	console.trace('changeIcon', props)
 	const { enableUrl, disableUrl, tabUrl, tabId, execReplace } = props
 
 	if (!execReplace) {
