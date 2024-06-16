@@ -5,7 +5,13 @@ import { isBoolean } from '@utils/isBoolean'
 
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
 	const { tabId } = details
-	chrome.tabs.sendMessage(tabId, message.historyChanged).catch()
+
+	chrome.tabs
+		.sendMessage(tabId, message.historyChanged)
+		.then(() => {})
+		.catch(() => {})
+
+	console.log('webNavigation.onHistoryStateUpdated', details)
 })
 
 getChromeStorage().then(({ execReplace }) => {

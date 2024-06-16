@@ -8,6 +8,7 @@ import { constructStyleValue } from './constructStyleValue'
 import { copyAttributes } from './copyAttributes'
 import { initializeDisplayStyle } from './initializeDisplayStyle'
 import { resetClassname } from './resetClassname'
+import { canExecInCurrentUrl } from '../libs/canExecInCurrentUrl'
 
 const NAME_PREFIX = 'code-translate-'
 
@@ -55,9 +56,7 @@ function generateReplacePairId() {
 	return NAME_PREFIX + 'replace-pair-' + uuid()
 }
 
-getChromeStorage().then((storage) => {
-	changeCodeToSpan(storage.execReplace)
-})
+changeCodeToSpan()
 
 /**
  * ※削除しない
@@ -68,9 +67,12 @@ getChromeStorage().then((storage) => {
 chrome.runtime.onMessage.addListener((message) => {
 	if (message === messageProtocol.historyChanged) {
 		STYLE_MAP.clear()
-		getChromeStorage().then((storage) => {
-			changeCodeToSpan(storage.execReplace)
-		})
+
+		changeCodeToSpan()
+	}
+
+	if (message === messageProtocol.executeNowOnly) {
+		changeCodeToSpan(true)
 	}
 
 	return undefined
@@ -87,9 +89,7 @@ chrome.storage.local.onChanged.addListener((changes) => {
 		restyleReplaceElements()
 	}
 	if (isExecReplaceChanged) {
-		getChromeStorage().then((storage) => {
-			changeCodeToSpan(storage.execReplace)
-		})
+		changeCodeToSpan()
 	}
 })
 
@@ -152,10 +152,13 @@ async function restyleReplaceElements() {
 	addStyleGetErrorLogToStorage(styleGetErrorLogSet)
 }
 
-async function changeCodeToSpan(execReplace: boolean) {
-	if (!execReplace) return
+async function changeCodeToSpan(executeNowOnly?: boolean) {
+	const { extractAttributes, extractStyleKey, execReplace, disableUrl, enableUrl } = await getChromeStorage()
 
-	const { extractAttributes, extractStyleKey } = await getChromeStorage()
+	if (!executeNowOnly) {
+		if (!execReplace) return
+		if (!canExecInCurrentUrl({ enableUrl, disableUrl, currentUrl: document.location.href }).canExec) return
+	}
 
 	const codeElementsInSentence = [...document.querySelectorAll(`code:not(.${REPLACED_CODE_CLASSNAME})`)]
 		.filter(isHTMLElement)
