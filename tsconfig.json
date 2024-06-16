@@ -25,7 +25,8 @@
 			"@storage/*": ["./src/storage/*"],
 			"@utils/*": ["./src/utils/*"],
 			"@root/*": ["./src/*"]
-		}
+		},
+		"types": ["node", "jest", "chrome-types"]
 	},
-	"include": ["src/**/*", "../node_modules/chrome-types/index.d.ts"]
+	"include": ["src/**/*"]
 }
