@@ -1,4 +1,4 @@
-import { canExecInCurrentUrl, Returns } from '../../libs/canExecInCurrentUrl'
+import { canExecInCurrentUrl, Returns } from './canExecInCurrentUrl'
 
 describe('urlに条件がマッチするかどうか', () => {
 	test('ブロック', () => {
