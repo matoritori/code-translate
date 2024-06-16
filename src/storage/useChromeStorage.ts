@@ -1,6 +1,7 @@
 import { ChromeStorage } from '@models/ChromeStorage'
 import { useSyncExternalStore } from 'react'
 import { getChromeStorage } from './getChromeStorage'
+import { chromeAPI } from '@root/libs/chromeAPI'
 
 export function useChromeStorage() {
 	const storage = useSyncExternalStore(subscribe, getSnapshot)
@@ -18,10 +19,10 @@ function subscribe(callback: () => void) {
 		})
 	}
 
-	chrome.storage.onChanged.addListener(listener)
+	chromeAPI.storage.onChanged.addListener(listener)
 
 	return () => {
-		chrome.storage.onChanged.removeListener(listener)
+		chromeAPI.storage.onChanged.removeListener(listener)
 	}
 }
 
