@@ -18,11 +18,19 @@ export function canExecInCurrentUrl(props: Props): Returns {
 		}
 	}
 
-	for (const url of disableUrl) {
-		if (new RegExp(url).test(currentUrl)) {
-			return { canExec: false, reason: 'matchedDisableUrl' }
-		}
+	if (isMatchedDisableUrl(currentUrl, disableUrl)) {
+		return { canExec: false, reason: 'matchedDisableUrl' }
 	}
 
 	return { canExec: true, reason: 'nothingMatched' }
+}
+
+export function isMatchedDisableUrl(currentUrl: string, disableUrl: string[]): boolean {
+	for (const url of disableUrl) {
+		if (new RegExp(url).test(currentUrl)) {
+			return true
+		}
+	}
+
+	return false
 }
