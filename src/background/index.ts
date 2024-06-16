@@ -1,41 +1,73 @@
 import { ChromeStorageKey } from '@models/ChromeStorage'
 import { message } from '@root/message/message'
 import { getChromeStorage } from '@storage/getChromeStorage'
-import { isBoolean } from '@utils/isBoolean'
+import { changeIcon } from './changeIcon'
 
-chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
-	const { tabId } = details
+async function pageLoadListener(details: { tabId: number; url: string; frameType: chrome.extensionTypes.FrameType }) {
+	const { tabId, url, frameType } = details
 
-	chrome.tabs
-		.sendMessage(tabId, message.historyChanged)
-		.then(() => {})
-		.catch(() => {})
+	if (frameType !== 'outermost_frame') return
 
-	console.log('webNavigation.onHistoryStateUpdated', details)
-})
+	console.log('pageLoadListener', details)
 
-getChromeStorage().then(({ execReplace }) => {
-	changeIconByExecReplace(execReplace)
-})
+	const storage = await getChromeStorage()
 
-async function changeIconByExecReplace(execReplace: boolean) {
-	const iconPath = execReplace ? '../icon16checked.png' : '../icon16.png'
-
-	chrome.action.setIcon({
-		path: iconPath,
+	changeIcon({
+		tabUrl: url,
+		tabId,
+		disableUrl: storage.disableUrl,
+		enableUrl: storage.enableUrl,
+		execReplace: storage.execReplace,
 	})
 }
 
-chrome.storage.local.onChanged.addListener((changes) => {
-	const targetKey: ChromeStorageKey = 'execReplace'
+chrome.webNavigation.onCommitted.addListener(pageLoadListener)
+chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
+	const { tabId, url } = details
 
-	for (const [storageKey, storageChange] of Object.entries(changes)) {
-		if (storageKey === targetKey) {
-			const value = storageChange.newValue
+	chrome.tabs.sendMessage(tabId, message.historyChanged).catch(() => {})
 
-			if (isBoolean(value)) {
-				changeIconByExecReplace(storageChange.newValue)
-			}
-		}
-	}
+	const storage = await getChromeStorage()
+
+	changeIcon({
+		tabUrl: url,
+		tabId,
+		disableUrl: storage.disableUrl,
+		enableUrl: storage.enableUrl,
+		execReplace: storage.execReplace,
+	})
+})
+
+chrome.storage.local.onChanged.addListener(async (changes) => {
+	const isExecReplaceChanged = (['execReplace', 'disableUrl', 'enableUrl'] satisfies ChromeStorageKey[]).some((key) =>
+		Object.keys(changes).includes(key)
+	)
+	if (!isExecReplaceChanged) return
+
+	const storage = await getChromeStorage()
+	const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+	if (tab.url === undefined || tab.id === undefined) return
+
+	changeIcon({
+		tabUrl: tab.url,
+		tabId: tab.id,
+		disableUrl: storage.disableUrl,
+		enableUrl: storage.enableUrl,
+		execReplace: storage.execReplace,
+	})
+})
+
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+	const storage = await getChromeStorage()
+	const tab = await chrome.tabs.get(tabId)
+
+	if (tab.url === undefined || tab.id === undefined) return
+
+	changeIcon({
+		tabUrl: tab.url,
+		tabId: tab.id,
+		disableUrl: storage.disableUrl,
+		enableUrl: storage.enableUrl,
+		execReplace: storage.execReplace,
+	})
 })
