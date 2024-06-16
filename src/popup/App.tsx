@@ -1,4 +1,4 @@
-import { canExecInCurrentUrl } from '@root/libs/canExecInCurrentUrl'
+import { canExecInCurrentUrl, isMatchedDisableUrl } from '@root/libs/canExecInCurrentUrl'
 import { message } from '@root/message/message'
 import { setChromeStorage } from '@storage/setChromeStorage'
 import { useChromeStorage } from '@storage/useChromeStorage'
@@ -9,10 +9,11 @@ import { Checkbox } from './components/Checkbox'
 import { Button } from './components/Button'
 import { Hr } from './components/Hr'
 import { Textarea } from './components/Textarea'
+import { Aside } from './components/Aside'
 
 export function App() {
 	const currentTabUrl = useCurrentTabUrl()
-	const [colorMode, setColorMode] = useColorModeNameForTailwind()
+	const [colorMode] = useColorModeNameForTailwind()
 
 	return (
 		<div
@@ -54,9 +55,7 @@ function ExecuteNowOnly() {
 			<Hr />
 			<div className='p-4 flex'>
 				<Button onClick={handleClick} className='mx-auto'>
-					今だけcode要素を
-					<br />
-					span要素に置き換える
+					今だけ翻訳を修正する
 				</Button>
 			</div>
 		</>
@@ -82,7 +81,7 @@ function ExecReplaceInput() {
 	return (
 		<div className='my-4'>
 			<label className='flex items-center text-nowrap'>
-				code要素をspan要素に置き換える
+				翻訳を修正する
 				<Checkbox type='checkbox' checked={execReplace} onChange={handleChange} />
 			</label>
 
@@ -122,7 +121,8 @@ function ConfigureExecutionByUrl({ currentTabUrl }: { currentTabUrl: string }) {
 	if (!canExecInCurrentUrlResult.canExec) {
 		return (
 			<div className={containerClassName}>
-				設定によりこのページで拡張機能は実行されません。
+				翻訳の修正は無効になっています。
+				<Aside>このページは、翻訳の修正を無効にするURLの設定により、機能を停止しています。</Aside>
 				<div className='mt-2'>
 					<Button className='text-sm' onClick={cancelDisapproval}>
 						不許可を取り消す
@@ -136,23 +136,27 @@ function ConfigureExecutionByUrl({ currentTabUrl }: { currentTabUrl: string }) {
 			</div>
 		)
 	} else if (canExecInCurrentUrlResult.reason === 'matchedEnableUrl') {
-		return (
-			<div className={containerClassName}>
-				翻訳の修正を有効にするURLに一致しているため、
-				<br />
-				拡張機能は実行されます。
-				<div className='mt-2'>
-					<Button className='text-sm' onClick={cancelApproval}>
-						許可を取り消す
-					</Button>
+		if (isMatchedDisableUrl(currentTabUrl, disableUrl)) {
+			return (
+				<div className={containerClassName}>
+					このページは翻訳の修正を<b>有効</b>にするURLに一致するため、
+					<br />
+					無効にするURLの設定を上書きして機能が有効になっています。
+					<div className='mt-2'>
+						<Button className='text-sm' onClick={cancelApproval}>
+							許可を取り消す
+						</Button>
+					</div>
+					<div className='mt-2'>
+						<Button className='text-sm' onClick={() => chrome.runtime.openOptionsPage()}>
+							オプションページで詳しく設定する
+						</Button>
+					</div>
 				</div>
-				<div className='mt-2'>
-					<Button className='text-sm' onClick={() => chrome.runtime.openOptionsPage()}>
-						オプションページで詳しく設定する
-					</Button>
-				</div>
-			</div>
-		)
+			)
+		} else {
+			return <></>
+		}
 	} else {
 		return (
 			<div className={containerClassName}>
